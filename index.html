@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>회전체 작품 AR 갤러리 · 구월중</title>
+<style>
+  :root { --bg: #f3f6fb; --card: #fff; --ink: #1d2733; --mute: #5b6878; --line: #d6dfeb; --accent: #d9468a; --accent2: #2a5d9a; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #14181f; --card: #1d232d; --ink: #e6ecf3; --mute: #9aa7b6; --line: #2e3744; --accent: #f07ab0; --accent2: #8ab8f0; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--mute); margin: 0 0 18px; font-size: 14.5px; line-height: 1.6; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+  input { flex: 1 1 220px; font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
+  .count { color: var(--mute); font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .grid a { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; font-size: 16px; font-weight: 600; word-break: keep-all; overflow-wrap: anywhere; }
+  .grid a:hover, .grid a:focus-visible { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px var(--accent); }
+  .grid a span.ic { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 15px; }
+  .grid a small { display: block; font-weight: 400; font-size: 12px; color: var(--mute); }
+  .empty { color: var(--mute); padding: 24px 0; }
+  footer { margin-top: 26px; font-size: 13px; color: var(--mute); line-height: 1.7; }
+</style>
+</head>
+<body>
+<main>
+  <h1>회전체 작품 AR 갤러리</h1>
+  <p class="sub">평면도형을 한 직선을 축으로 1회전 시켜 만든 나만의 회전체예요. 이름을 누르면 3D로 돌려 볼 수 있고, 스마트폰에서는 <b>AR로 보기</b>로 내 책상 위에 올려 볼 수 있어요.</p>
+  <div class="bar">
+    <input id="q" type="search" placeholder="학번으로 찾기 (예: 10101)" aria-label="작품 찾기">
+    <span class="count" id="count"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <footer>안드로이드는 Chrome, 아이폰·아이패드는 Safari에서 열어야 AR이 돼요. 작품 파일은 무게가 있어 처음 열 때 몇 초 걸릴 수 있어요.</footer>
+</main>
+<script>
+const ITEMS = [{"name": "10101 홍*동", "dir": "10101", "mb": 3.9}, {"name": "algeomath", "dir": "algeomath", "mb": 0.4}, {"name": "시험 _작품", "dir": "시험__작품", "mb": 0.1}];
+const grid = document.getElementById('grid'), q = document.getElementById('q'), count = document.getElementById('count');
+function render() {
+  const k = q.value.trim().toLowerCase();
+  const list = ITEMS.filter((i) => !k || i.name.toLowerCase().includes(k));
+  grid.innerHTML = '';
+  for (const i of list) {
+    const a = document.createElement('a');
+    a.href = 'works/' + encodeURIComponent(i.dir) + '/';
+    const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = '◎';
+    const t = document.createElement('span'); t.textContent = i.name;
+    const s = document.createElement('small'); s.textContent = i.mb + 'MB'; t.append(s);
+    a.append(ic, t); grid.append(a);
+  }
+  if (!list.length) grid.innerHTML = '<p class="empty">' + (ITEMS.length ? '찾는 작품이 없어요.' : '아직 올라온 작품이 없어요.') + '</p>';
+  count.textContent = (k ? list.length + ' / ' : '') + ITEMS.length + '개';
+}
+q.oninput = render;
+render();
+</script>
+</body>
+</html>
