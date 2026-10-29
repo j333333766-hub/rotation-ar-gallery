@@ -4,7 +4,7 @@
 # - ZIP 은 그림판3D 의 '저장 → AR 웹뷰어 (ZIP)' 결과(index.html·model.glb·model.usdz). 이 셋만 꺼낸다.
 # - 작품마다 works/<파일 이름>/ 에 풀고, 뷰어 위쪽에 작품 이름과 '← 작품 목록' 을 넣는다.
 # - 첫 화면은 ZIP 개수만큼 파일 이름 버튼. 고친 뒤 git add -A → commit → push 하면 1~2분 뒤 Pages 에 반영.
-import html, io, json, re, sys, zipfile
+import hashlib, html, io, json, re, shutil, subprocess, sys, zipfile
 from pathlib import Path
 from urllib.parse import quote
 import segno
@@ -91,6 +91,30 @@ for z in sorted(SRC.glob('*.zip'), key=lambda p: p.name):
             items.append({'name': name, 'dir': d.name, 'mb': round(size / 1e6, 1)})
     except zipfile.BadZipFile:
         skipped.append(f'{z.name} (ZIP 파일이 깨짐)')
+
+# 미리보기 사진(thumb.webp): model.glb 내용이 같으면 _thumbcache/ 에 둔 사진을 다시 쓰고, 새 모델만 thumbs.mjs 로 찍는다
+CACHE = ROOT / '_thumbcache'
+CACHE.mkdir(exist_ok=True)
+jobs = []
+for it in items:
+    d = WORKS / it['dir']
+    it['h'] = hashlib.sha1((d / 'model.glb').read_bytes()).hexdigest()[:16]
+    c = CACHE / f"{it['h']}.webp"
+    if c.exists():
+        shutil.copyfile(c, d / 'thumb.webp')
+    else:
+        jobs.append({'glb': f"works/{it['dir']}/model.glb", 'out': f"works/{it['dir']}/thumb.webp"})
+if jobs:
+    jf = CACHE / 'jobs.json'
+    jf.write_text(json.dumps(jobs, ensure_ascii=False), encoding='utf-8')
+    subprocess.run(['node', str(ROOT / 'thumbs.mjs'), str(jf)], cwd=ROOT)
+    jf.unlink()
+for it in items:
+    t = WORKS / it['dir'] / 'thumb.webp'
+    it['thumb'] = t.exists()
+    if t.exists():
+        shutil.copyfile(t, CACHE / f"{it['h']}.webp")
+    del it['h']
 
 total = sum(i['mb'] for i in items)
 data = json.dumps(items, ensure_ascii=False).replace('<', '\\u003c')

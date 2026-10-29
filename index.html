@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>회전체 작품 AR 갤러리 · 구월중</title>
 <style>
-  :root { --bg: #f3f6fb; --card: #fff; --ink: #1d2733; --mute: #5b6878; --line: #d6dfeb; --accent: #d9468a; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #14181f; --card: #1d232d; --ink: #e6ecf3; --mute: #9aa7b6; --line: #2e3744; --accent: #f07ab0; } }
+  :root { --bg: #f3f6fb; --card: #fff; --ink: #1d2733; --mute: #5b6878; --line: #d6dfeb; --accent: #d9468a; --pic1: #ffffff; --pic2: #e6ecf5; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #14181f; --card: #1d232d; --ink: #e6ecf3; --mute: #9aa7b6; --line: #2e3744; --accent: #f07ab0; --pic1: #3a4252; --pic2: #232a35; } }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif; }
   main { max-width: 960px; margin: 0 auto; padding: 20px 16px 40px; }
@@ -23,11 +23,15 @@
   .qr figcaption b { display: block; color: var(--ink); font-size: 14px; }
   /* 휴대폰으로 이미 들어왔으면 QR 은 필요 없음 → 좁은 화면에서는 숨김 */
   @media (max-width: 640px) { .qr { display: none; } }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-  .grid a { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 10px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; font-size: 16px; font-weight: 600; word-break: keep-all; overflow-wrap: anywhere; }
+  /* 작품 카드: 위에 미리보기 사진(정사각형), 아래에 이름 */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .grid a { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; color: var(--ink); text-decoration: none; }
   .grid a:hover, .grid a:focus-visible { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px var(--accent); }
-  .grid a span.ic { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 14px; }
-  .grid a small { display: block; font-weight: 400; font-size: 12px; color: var(--mute); }
+  .grid .pic { aspect-ratio: 1; max-width: 100%; background: radial-gradient(circle at 50% 40%, var(--pic1), var(--pic2)); display: grid; place-items: center; }
+  .grid .pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .grid .pic .none { font-size: 34px; color: var(--mute); }
+  .grid .nm { padding: 8px 12px 10px; font-size: 15.5px; font-weight: 600; word-break: keep-all; overflow-wrap: anywhere; }
+  .grid .nm small { display: block; font-weight: 400; font-size: 12px; color: var(--mute); }
   .empty { color: var(--mute); padding: 24px 0; }
 </style>
 </head>
@@ -47,15 +51,20 @@
   <div class="grid" id="grid"></div>
 </main>
 <script>
-const ITEMS = [{"name": "10101 홍*동", "dir": "10101", "mb": 4.0}, {"name": "algeomath", "dir": "algeomath", "mb": 0.4}, {"name": "시험 _작품", "dir": "시험__작품", "mb": 0.1}];
+const ITEMS = [{"name": "10101 홍*동", "dir": "10101", "mb": 4.0, "thumb": true}, {"name": "algeomath", "dir": "algeomath", "mb": 0.4, "thumb": true}, {"name": "시험 _작품", "dir": "시험__작품", "mb": 0.1, "thumb": true}];
 const grid = document.getElementById('grid');
 for (const i of ITEMS) {
   const a = document.createElement('a');
   a.href = 'works/' + encodeURIComponent(i.dir) + '/';
-  const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = '◎';
-  const t = document.createElement('span'); t.textContent = i.name;
+  const pic = document.createElement('div'); pic.className = 'pic';
+  if (i.thumb) {
+    const im = document.createElement('img');
+    im.src = 'works/' + encodeURIComponent(i.dir) + '/thumb.webp'; im.alt = i.name + ' 미리보기'; im.loading = 'lazy';
+    pic.append(im);
+  } else pic.innerHTML = '<span class="none">◎</span>';
+  const t = document.createElement('div'); t.className = 'nm'; t.textContent = i.name;
   const s = document.createElement('small'); s.textContent = i.mb + 'MB'; t.append(s);
-  a.append(ic, t); grid.append(a);
+  a.append(pic, t); grid.append(a);
 }
 if (!ITEMS.length) grid.innerHTML = '<p class="empty">아직 올라온 작품이 없어요.</p>';
 document.getElementById('count').textContent = ITEMS.length + '개';
