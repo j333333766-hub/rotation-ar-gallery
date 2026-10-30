@@ -15,3 +15,4 @@
 - GitHub Pages 사이트 한도는 1GB. 작품 하나가 0.1~4MB라 800MB가 넘으면 build.py가 경고한다 → 반별 저장소로 나눈다.
 - 카드 미리보기 사진 `works/<학번>/thumb.webp`: build.py 가 `thumbs.mjs`(헤드리스 크롬 + model-viewer, 비스듬한 각도, 투명 바탕)로 찍는다.
   model.glb 내용이 같으면 `_thumbcache/`(git 제외)의 사진을 다시 써서 새 작품만 찍는다(작품당 1초 남짓). node·크롬·playwright-core(algeo3d-paint 폴더) 필요.
+- 첫 화면 위쪽에 반 고르기 칩(전체·1학년 7반…·기타). 반은 폴더 이름 학번 5자리에서 뽑고, 학번이 아니면 '기타'. 주소 끝 `#1-7`로 그 반만 열린다.

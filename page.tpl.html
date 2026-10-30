@@ -33,6 +33,13 @@
   .grid .nm { padding: 8px 12px 10px; font-size: 15.5px; font-weight: 600; word-break: keep-all; overflow-wrap: anywhere; }
   .grid .nm small { display: block; font-weight: 400; font-size: 12px; color: var(--mute); }
   .empty { color: var(--mute); padding: 24px 0; }
+  /* 반 고르기 칩: 주소 끝 #1-7 로도 열림 */
+  .grid a[hidden], .chips[hidden] { display: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .chips button { font: inherit; font-size: 14.5px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  .chips button small { color: var(--mute); margin-left: 4px; font-size: 12px; }
+  .chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chips button[aria-pressed="true"] small { color: #fff; }
 </style>
 </head>
 <body>
@@ -47,11 +54,15 @@
       <figcaption><b>스마트폰으로 열기</b>카메라로 QR을 찍어요</figcaption>
     </figure>
   </div>
+  <div class="chips" id="chips" role="group" aria-label="반 고르기"></div>
   <div class="grid" id="grid"></div>
 </main>
 <script>
 const ITEMS = __ITEMS__;
 const grid = document.getElementById('grid');
+// 학번 5자리(학년 1 + 반 2 + 번호 2)에서 반을 뽑는다. 학번이 아닌 이름은 '기타'
+const klass = (dir) => { const m = /^(\d)(\d\d)\d\d/.exec(dir); return m ? m[1] + '-' + Number(m[2]) : '기타'; };
+const label = (k) => k === '전체' || k === '기타' ? k : k.replace('-', '학년 ') + '반';
 for (const i of ITEMS) {
   const a = document.createElement('a');
   a.href = 'works/' + encodeURIComponent(i.dir) + '/';
@@ -63,10 +74,29 @@ for (const i of ITEMS) {
   } else pic.innerHTML = '<span class="none">◎</span>';
   const t = document.createElement('div'); t.className = 'nm'; t.textContent = i.name;
   const s = document.createElement('small'); s.textContent = i.mb + 'MB'; t.append(s);
+  a.dataset.k = klass(i.dir);
   a.append(pic, t); grid.append(a);
 }
 if (!ITEMS.length) grid.innerHTML = '<p class="empty">아직 올라온 작품이 없어요.</p>';
-document.getElementById('count').textContent = ITEMS.length + '개';
+const counts = {};
+for (const i of ITEMS) counts[klass(i.dir)] = (counts[klass(i.dir)] || 0) + 1;
+const keys = Object.keys(counts).sort((a, b) => (a === '기타') - (b === '기타') || a.localeCompare(b, 'ko', { numeric: true }));
+const chips = document.getElementById('chips');
+if (keys.length < 2) chips.hidden = true;
+const show = (k) => {
+  if (k !== '전체' && !counts[k]) k = '전체';
+  for (const a of grid.querySelectorAll('a')) a.hidden = k !== '전체' && a.dataset.k !== k;
+  for (const b of chips.children) b.setAttribute('aria-pressed', String(b.dataset.k === k));
+  document.getElementById('count').textContent = (k === '전체' ? ITEMS.length : counts[k]) + '개';
+};
+for (const k of ['전체', ...keys]) {
+  const b = document.createElement('button'); b.type = 'button'; b.dataset.k = k;
+  b.textContent = label(k);
+  const n = document.createElement('small'); n.textContent = k === '전체' ? ITEMS.length : counts[k]; b.append(n);
+  b.onclick = () => { history.replaceState(null, '', k === '전체' ? location.pathname : '#' + k); show(k); };
+  chips.append(b);
+}
+show(decodeURIComponent(location.hash.slice(1)) || '전체');
 </script>
 </body>
 </html>
