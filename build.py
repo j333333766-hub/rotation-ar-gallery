@@ -31,7 +31,9 @@ def label(zip_path):
     s = re.sub(r'[_ ]*AR ?웹뷰어$', '', s).strip(' _') or zip_path.stem
     m = re.match(r'^(\d{4,6})[\s_-]*([가-힣]{2,5})', s)
     if not m:
-        return s, s
+        # '10626wjsdudwls'처럼 한글 이름을 영문 자판으로 친 경우도 이름이라 학번만 보인다
+        m = re.match(r'^(\d{5})[\s_-]*[A-Za-z]', s)
+        return (m[1], m[1]) if m else (s, s)
     sid, nm = m.groups()
     masked = nm[0] + '*' if len(nm) == 2 else nm[0] + '*' * (len(nm) - 2) + nm[-1]
     return f'{sid} {masked}', sid
