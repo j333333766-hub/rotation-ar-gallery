@@ -2,6 +2,7 @@
 #   python build.py            ← 제출 폴더의 ZIP 을 모두 풀어 works/ 와 첫 화면(index.html)을 새로 만든다
 #   python build.py <폴더>     ← 다른 폴더의 ZIP 으로
 # - ZIP 은 그림판3D 의 '저장 → AR 웹뷰어 (ZIP)' 결과(index.html·model.glb·model.usdz). 이 셋만 꺼낸다.
+# - 하위 폴더 속 ZIP·압축을 풀어 둔 폴더도 읽는다(같은 학번이 이미 있으면 건너뜀).
 # - 작품마다 works/<파일 이름>/ 에 풀고, 뷰어 위쪽에 작품 이름과 '← 작품 목록' 을 넣는다.
 # - 첫 화면은 ZIP 개수만큼 파일 이름 버튼. 고친 뒤 git add -A → commit → push 하면 1~2분 뒤 Pages 에 반영.
 import hashlib, html, io, json, re, shutil, subprocess, sys, zipfile
@@ -29,6 +30,7 @@ def label(zip_path):
     """보여 줄 이름과 폴더 이름. 공개 사이트라 '10101홍길동' → ('10101 홍*동', '10101'): 이름은 가운데를 가리고 폴더는 학번만(10/29 사용자 결정)."""
     s = zip_path.stem
     s = re.sub(r'[_ ]*AR ?웹뷰어$', '', s).strip(' _') or zip_path.stem
+    s = re.sub(r'^\W+', '', s) or s   # '❤️10912홍길동'처럼 앞에 붙은 이모지·기호는 떼야 이름이 가려진다
     m = re.match(r'^(\d{4,6})[\s_-]*([가-힣]{2,5})', s)
     if not m:
         # '10626wjsdudwls'처럼 한글 이름을 영문 자판으로 친 경우도 이름이라 학번만 보인다
@@ -74,25 +76,50 @@ for f in sorted(WORKS.rglob('*'), key=lambda p: -len(p.parts)):
     except OSError:
         pass
 items, used, skipped = [], set(), []
-for z in sorted(SRC.glob('*.zip'), key=lambda p: p.name):
+
+
+def add_work(src, read):
+    """src: 이름을 딸 ZIP(또는 폴더) 경로, read(k): NEED 파일 k 의 내용."""
+    name, key = label(src)
+    d = WORKS / slug(key, used)
+    d.mkdir(exist_ok=True)
+    for k in NEED:
+        data = read(k)
+        if k == 'index.html':
+            data = patch_viewer(data.decode('utf-8'), name, f'{BASE}works/{quote(d.name)}/').encode('utf-8')
+        (d / k).write_bytes(data)
+    size = sum((d / k).stat().st_size for k in NEED)
+    items.append({'name': name, 'dir': d.name, 'mb': round(size / 1e6, 1)})
+
+
+# 1) 제출 폴더 바로 아래 ZIP (원래 방식: 같은 학번 ZIP 이 둘이면 둘 다 카드가 생김)
+# 2) 학생이 만든 하위 폴더 속 ZIP 과, ZIP 을 풀어 둔 폴더(index.html·model.glb·model.usdz 가 바로 들어 있는 폴더)
+#    — 1)에 이미 있는 학번(같은 이름)이면 건너뛴다(친구 ZIP 을 자기 폴더에 함께 넣은 경우가 많음)
+top = sorted(SRC.glob('*.zip'), key=lambda p: p.name)
+sub = sorted((p for p in SRC.rglob('*.zip') if p.parent != SRC), key=lambda p: (len(p.parts), str(p)))
+loose = sorted((p for p in SRC.rglob('*') if p.is_dir() and all((p / k).is_file() for k in NEED)), key=str)
+for z in top + sub:
+    rel = z.relative_to(SRC).as_posix()
+    if z.parent != SRC and slug(label(z)[1], set()) in used:
+        skipped.append(f'{rel} (같은 작품이 이미 있음)')
+        continue
     try:
         with zipfile.ZipFile(z) as zf:
             names = {Path(i.filename).name: i for i in zf.infolist() if not i.is_dir()}
             if not all(k in names for k in NEED):
-                skipped.append(f'{z.name} (AR 웹뷰어 ZIP 이 아님: {", ".join(k for k in NEED if k not in names)} 없음)')
+                skipped.append(f'{rel} (AR 웹뷰어 ZIP 이 아님: {", ".join(k for k in NEED if k not in names)} 없음)')
                 continue
-            name, key = label(z)
-            d = WORKS / slug(key, used)
-            d.mkdir(exist_ok=True)
-            for k in NEED:
-                data = zf.read(names[k])
-                if k == 'index.html':
-                    data = patch_viewer(data.decode('utf-8'), name, f'{BASE}works/{quote(d.name)}/').encode('utf-8')
-                (d / k).write_bytes(data)
-            size = sum((d / k).stat().st_size for k in NEED)
-            items.append({'name': name, 'dir': d.name, 'mb': round(size / 1e6, 1)})
+            add_work(z, lambda k: zf.read(names[k]))
     except zipfile.BadZipFile:
-        skipped.append(f'{z.name} (ZIP 파일이 깨짐)')
+        skipped.append(f'{rel} (ZIP 파일이 깨짐)')
+for p in loose:
+    rel = p.relative_to(SRC).as_posix()
+    # 폴더 이름이 '학번이름' 꼴이면 그 이름으로. Path('11001 강이원.zip') 처럼 넘겨 label() 을 그대로 쓴다
+    src = p.with_name(p.name + '.zip')
+    if slug(label(src)[1], set()) in used:
+        skipped.append(f'{rel}/ (풀어 둔 폴더, 같은 작품이 이미 있음)')
+        continue
+    add_work(src, lambda k: (p / k).read_bytes())
 
 # 미리보기 사진(thumb.webp): model.glb 내용이 같으면 _thumbcache/ 에 둔 사진을 다시 쓰고, 새 모델만 thumbs.mjs 로 찍는다
 CACHE = ROOT / '_thumbcache'
