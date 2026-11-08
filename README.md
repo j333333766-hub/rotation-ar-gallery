@@ -29,3 +29,12 @@
 - 실제 AR에는 지원 기기와 최신 Google 앱·Google Play AR 서비스가 필요합니다. 브라우저 자동 검증으로는 실물 스마트폰의 카메라 추적까지 확인할 수 없습니다.
 
 참고: [model-viewer AR](https://modelviewer.dev/examples/augmentedreality/), [Google Scene Viewer](https://developers.google.com/ar/develop/scene-viewer)
+
+## 11/10 특별 수업 작품(학교 앱 제출) 싣기 (2026-11-08 추가)
+
+- 특별 수업(odap-rediscovery.web.app/rotation-special)은 학생이 활동지 안에서 GLB·USDZ를 올린다(Firestore `wbFiles/rotation-special_*`).
+- `node special_sync.mjs` → `_special/<학번이름>/model.glb(·model.usdz)`로 받아 둔다(읽기만, 바뀐 것만). 이 PC의 firebase CLI 로그인을 쓴다.
+- `python build.py`가 `_special/`도 읽어 `works/<학번>_sp/`에 '학번 이*름 · 특별 수업' 카드로 싣는다(10/29 작품과 따로). USDZ가 없으면 뷰어의 `ios-src`를 뺀다.
+- 한 번에: `special_update.ps1`(받기 → 빌드 → 바뀌면 커밋·푸시, 기록 special_update.log).
+- 수업 날 자동: `special_schedule.ps1`로 작업 스케줄러 '특별수업 AR갤러리 갱신'(11/10 08:00부터 9시간, 1분마다) 등록. 끄기 `Unregister-ScheduledTask -TaskName '특별수업 AR갤러리 갱신' -Confirm:$false`.
+- `_special/`·동기화 스크립트들은 실명 폴더·로컬 토큰을 쓰므로 git에 올리지 않는다(.gitignore).

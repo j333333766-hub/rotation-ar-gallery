@@ -124,6 +124,24 @@ for p in loose:
         continue
     add_work(src, lambda k: (p / k).read_bytes())
 
+# 3) 11/10 특별 수업(/rotation-special): special_sync.mjs 가 학교 앱에서 받아 둔 _special/<학번이름>/model.glb(·model.usdz)
+#    활동지 안에서 GLB 나 USDZ 하나만 올리므로 model.usdz 는 없을 수 있다(없으면 아이폰 Quick Look 은 model-viewer 가 GLB 로 만든다).
+#    같은 학생의 10/29 작품이 있어도 따로 카드를 만든다(이름 뒤 ' · 특별 수업').
+SPECIAL = ROOT / '_special'
+for p in (sorted(x for x in SPECIAL.iterdir() if x.is_dir() and (x / 'model.glb').is_file()) if SPECIAL.is_dir() else []):
+    name, key = label(p.with_name(p.name + '.zip'))
+    name += ' · 특별 수업'
+    d = WORKS / slug(key + '_sp', used)
+    d.mkdir(exist_ok=True)
+    text = patch_viewer('', name, f'{BASE}works/{quote(d.name)}/')
+    (d / 'model.glb').write_bytes((p / 'model.glb').read_bytes())
+    if (p / 'model.usdz').is_file():
+        (d / 'model.usdz').write_bytes((p / 'model.usdz').read_bytes())
+    else:
+        text = text.replace(' ios-src="model.usdz"', '')
+    (d / 'index.html').write_text(text, encoding='utf-8')
+    items.append({'name': name, 'dir': d.name, 'mb': round(sum(f.stat().st_size for f in d.iterdir()) / 1e6, 1)})
+
 # 미리보기 사진(thumb.webp): model.glb 내용이 같으면 _thumbcache/ 에 둔 사진을 다시 쓰고, 새 모델만 thumbs.mjs 로 찍는다
 CACHE = ROOT / '_thumbcache'
 CACHE.mkdir(exist_ok=True)

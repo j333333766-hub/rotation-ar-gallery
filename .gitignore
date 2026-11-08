@@ -2,3 +2,11 @@ __pycache__/
 *.zip
 desktop.ini
 _thumbcache/
+
+# 11/10 특별 수업 동기화(학생 실명 폴더·로컬 토큰 사용 스크립트는 올리지 않음)
+_special/
+special_sync.mjs
+special_update.ps1
+special_schedule.ps1
+special_update.log
+.special.lock
