@@ -19,3 +19,13 @@
 - 카드 미리보기 사진 `works/<학번>/thumb.webp`: build.py 가 `thumbs.mjs`(헤드리스 크롬 + model-viewer, 비스듬한 각도, 투명 바탕)로 찍는다.
   model.glb 내용이 같으면 `_thumbcache/`(git 제외)의 사진을 다시 써서 새 작품만 찍는다(작품당 1초 남짓). node·크롬·playwright-core(algeo3d-paint 폴더) 필요.
 - 첫 화면 위쪽에 반 고르기 칩(전체·1학년 7반…·기타). 반은 폴더 이름 학번 5자리에서 뽑고, 학번이 아니면 '기타'. 주소 끝 `#1-7`로 그 반만 열린다.
+
+## 안드로이드 AR 실행 수정 (2026-11-08)
+
+- `viewer.tpl.html`이 작품 뷰어의 공통 원본입니다. 브라우저 AR(WebXR)을 먼저 시도하고, 안드로이드에는 별도의 `Google 3D/AR로 열기` 링크를 제공합니다. iPhone/iPad Quick Look은 유지합니다.
+- AR 지원 확인이 모델 로딩보다 늦게 끝나도 버튼 상태가 갱신됩니다. 실행 실패, 카메라 권한, 앱 안의 브라우저, HTTPS가 아닌 주소에 대한 안내를 표시합니다.
+- `build.py`의 `patch_viewer`는 학생 ZIP에 들어 있는 오래된 뷰어 대신 이 공통 원본을 사용합니다. 모델·썸네일·학생 이름 가림 규칙은 그대로 유지합니다.
+- 이미 올라간 작품의 뷰어만 바꿀 때는 `python repair_ar_viewers.py`를 실행합니다. 제출 ZIP을 다시 가져오거나 작품 목록·모델 파일을 수정하지 않습니다. 기존 작품 제목과 목록 이동·QR 버튼을 보존합니다.
+- 실제 AR에는 지원 기기와 최신 Google 앱·Google Play AR 서비스가 필요합니다. 브라우저 자동 검증으로는 실물 스마트폰의 카메라 추적까지 확인할 수 없습니다.
+
+참고: [model-viewer AR](https://modelviewer.dev/examples/augmentedreality/), [Google Scene Viewer](https://developers.google.com/ar/develop/scene-viewer)

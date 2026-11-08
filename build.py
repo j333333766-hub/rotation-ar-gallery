@@ -53,6 +53,9 @@ def slug(name, used):
 def patch_viewer(text, name, url):
     """뷰어 위쪽: 왼쪽 '← 작품 목록', 가운데 작품 이름, 오른쪽 '📱 휴대폰으로' (누르면 이 작품 주소 QR)."""
     t = html.escape(name)
+    # Old student ZIPs keep the old AR launcher. Always use the maintained viewer
+    # while keeping model.glb/model.usdz and the public, masked label unchanged.
+    text = (ROOT / 'viewer.tpl.html').read_text(encoding='utf-8').replace('__WORK_NAME__', t)
     text = re.sub(r'<title>.*?</title>', f'<title>{t} · AR로 보기</title>', text, count=1, flags=re.S)
     side = 'position:absolute;top:50%;transform:translateY(-50%);color:inherit;font:inherit;font-size:14px;font-weight:600;text-decoration:none;opacity:.85'
     back = f'<a href="../../" style="{side};left:14px">← 작품 목록</a>'
