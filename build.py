@@ -130,7 +130,7 @@ for p in loose:
 SPECIAL = ROOT / '_special'
 for p in (sorted(x for x in SPECIAL.iterdir() if x.is_dir() and (x / 'model.glb').is_file()) if SPECIAL.is_dir() else []):
     name, key = label(p.with_name(p.name + '.zip'))
-    name += ' · 특별 수업'
+    name += ' · 나만의 회전체'
     d = WORKS / slug(key + '_sp', used)
     d.mkdir(exist_ok=True)
     text = patch_viewer('', name, f'{BASE}works/{quote(d.name)}/')
