@@ -59,7 +59,7 @@
   <div class="grid" id="grid"></div>
 </main>
 <script>
-const ITEMS = [];
+const ITEMS = [{"name": "11115 시* · 나만의 회전체", "dir": "11115_sp", "mb": 0.4, "thumb": true}];
 const grid = document.getElementById('grid');
 // 학번 5자리(학년 1 + 반 2 + 번호 2)에서 반을 뽑는다. 학번이 아닌 이름은 '기타'
 const klass = (dir) => { const m = /^(\d)(\d\d)\d\d/.exec(dir); return m ? m[1] + '-' + Number(m[2]) : '기타'; };
