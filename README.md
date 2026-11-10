@@ -42,4 +42,4 @@
 ## 11/11 바뀐 점
 - 갤러리에는 활동지(/rotation-special 15쪽)로 낸 작품만 싣는다(`build.py` 의 `USE_ONEDRIVE = False`). 원드라이브 제출 폴더의 기존 작품은 싣지 않는다(원본 그대로, 다시 실으려면 True).
 - 그전 갤러리(기존 작품 전체)는 git 태그 `gallery-before-1111` 에 남겨 둠.
-- 자동 갱신 예약: 11/11 14:30부터 4시간, 1분마다(`special_schedule.ps1`). 끄기: `Unregister-ScheduledTask -TaskName '특별수업 AR갤러리 갱신' -Confirm:$false`
+- 자동 갱신 예약은 쓰지 않음(11/11 사용자 결정: 화면이 깜빡임). 선생님이 요청할 때 `powershell -ExecutionPolicy Bypass -File special_update.ps1` 을 한 번 돌린다(받기→빌드→올리기). 예약 작업은 지웠다.
