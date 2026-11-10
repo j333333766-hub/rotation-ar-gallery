@@ -135,6 +135,8 @@ for p in loose:
 SPECIAL = ROOT / '_special'
 for p in (sorted(x for x in SPECIAL.iterdir() if x.is_dir() and (x / 'model.glb').is_file()) if SPECIAL.is_dir() else []):
     name, key = label(p.with_name(p.name + '.zip'))
+    if not re.fullmatch(r'\d{5}', key):   # 학번이 없는 기록(교사 계정 '교사조창현' 등)은 이름을 싣지 않는다(공개 사이트)
+        name, key = ('선생님 작품', 'teacher') if p.name.startswith('교사') else ('작품', 'work')
     name += ' · 나만의 회전체'
     d = WORKS / slug(key + '_sp', used)
     d.mkdir(exist_ok=True)
