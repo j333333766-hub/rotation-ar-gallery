@@ -24,9 +24,9 @@ ROOT = Path(__file__).parent
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(r'C:\Users\j333333\OneDrive - 구월중학교\2026학년도\회전체 만들기 3D 모델 제출')
 WORKS = ROOT / 'works'
 NEED = ('index.html', 'model.glb', 'model.usdz')
-# 원드라이브 제출 폴더(1·2번 출처)에서 갤러리에 싣지 않을 반(학번 앞 세 자리). 원본 파일은 그대로 둔다.
-# 11/11 사용자 결정: 1학년 6반은 10/30 작품을 빼고, 11/11 수업에서 활동지(3번 출처 _special)로 낸 작품만 싣는다.
-HOLD_CLASSES = ('106',)
+# 11/11 사용자 결정: 갤러리에는 활동지(/rotation-special)로 낸 작품(3번 출처 _special)만 싣는다.
+# 원드라이브 제출 폴더의 기존 작품(1·2번 출처)은 싣지 않는다(원본은 그대로). 다시 실으려면 True.
+USE_ONEDRIVE = False
 
 
 def label(zip_path):
@@ -104,16 +104,10 @@ def add_work(src, read):
 top = sorted(SRC.glob('*.zip'), key=lambda p: p.name)
 sub = sorted((p for p in SRC.rglob('*.zip') if p.parent != SRC), key=lambda p: (len(p.parts), str(p)))
 loose = sorted((p for p in SRC.rglob('*') if p.is_dir() and all((p / k).is_file() for k in NEED)), key=str)
-def held(src):
-    k = label(src)[1]
-    return len(k) == 5 and k.isdigit() and k[:3] in HOLD_CLASSES
-
-
+if not USE_ONEDRIVE:
+    top, sub, loose = [], [], []
 for z in top + sub:
     rel = z.relative_to(SRC).as_posix()
-    if held(z):
-        skipped.append(f'{rel} (보류한 반: {label(z)[1][:3]})')
-        continue
     if z.parent != SRC and slug(label(z)[1], set()) in used:
         skipped.append(f'{rel} (같은 작품이 이미 있음)')
         continue
@@ -130,9 +124,6 @@ for p in loose:
     rel = p.relative_to(SRC).as_posix()
     # 폴더 이름이 '학번이름' 꼴이면 그 이름으로. Path('11001 강이원.zip') 처럼 넘겨 label() 을 그대로 쓴다
     src = p.with_name(p.name + '.zip')
-    if held(src):
-        skipped.append(f'{rel}/ (보류한 반)')
-        continue
     if slug(label(src)[1], set()) in used:
         skipped.append(f'{rel}/ (풀어 둔 폴더, 같은 작품이 이미 있음)')
         continue

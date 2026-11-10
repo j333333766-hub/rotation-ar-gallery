@@ -38,3 +38,8 @@
 - 한 번에: `special_update.ps1`(받기 → 빌드 → 바뀌면 커밋·푸시, 기록 special_update.log).
 - 수업 날 자동: `special_schedule.ps1`로 작업 스케줄러 '특별수업 AR갤러리 갱신'(11/10 08:00부터 9시간, 1분마다) 등록. 끄기 `Unregister-ScheduledTask -TaskName '특별수업 AR갤러리 갱신' -Confirm:$false`.
 - `_special/`·동기화 스크립트들은 실명 폴더·로컬 토큰을 쓰므로 git에 올리지 않는다(.gitignore).
+
+## 11/11 바뀐 점
+- 갤러리에는 활동지(/rotation-special 15쪽)로 낸 작품만 싣는다(`build.py` 의 `USE_ONEDRIVE = False`). 원드라이브 제출 폴더의 기존 작품은 싣지 않는다(원본 그대로, 다시 실으려면 True).
+- 그전 갤러리(기존 작품 전체)는 git 태그 `gallery-before-1111` 에 남겨 둠.
+- 자동 갱신 예약: 11/11 14:30부터 4시간, 1분마다(`special_schedule.ps1`). 끄기: `Unregister-ScheduledTask -TaskName '특별수업 AR갤러리 갱신' -Confirm:$false`
